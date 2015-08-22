@@ -1,8 +1,6 @@
 # led-speech-edison
 
-Speech-activated LEDs using [Intel Edison](http://www.intel.com/content/www/us/en/do-it-yourself/edison.html), [SparkFun blocks](https://www.sparkfun.com/categories/272), [Python](https://www.python.org/), and [CMU Sphinx](http://cmusphinx.sourceforge.net/).
-
-Take a look at this [video](https://youtu.be/kVTV_qZtwlY) to see it in action.
+Device speech-activation using [Intel Edison](http://www.intel.com/content/www/us/en/do-it-yourself/edison.html), [SparkFun blocks](https://www.sparkfun.com/categories/272), [Python](https://www.python.org/), and [CMU Sphinx](http://cmusphinx.sourceforge.net/).
 
 ## Supplies
 
@@ -10,19 +8,6 @@ Take a look at this [video](https://youtu.be/kVTV_qZtwlY) to see it in action.
 * USB headset with microphone (and a micro USB OTG adapter)
 * [SparkFun Base Block](https://www.sparkfun.com/products/13045)
 * [SparkFun GPIO Block](https://www.sparkfun.com/products/13038) (solder headers, either male or female, to use the pins)
-* 4 LEDs (red, green, yellow, white)
-* 4 330Ω resistors
-* 4 1kΩ resistors
-* [4 NPN transistors](https://www.sparkfun.com/products/521)
-* Plenty of jumper wires
-
-### About the SparkFun blocks
-
-The [SparkFun blocks](https://www.sparkfun.com/news/1589) for Intel Edison provide an easy way to extend functionality. The boards can be stacked and Edison just snaps into place. This will allow us to power Edison via USB, connect a USB headset, and have access to the GPIO pins for our circuit while retaining Edison's small form factor.
-
-Here is a picture of Edison stacked on top of the Base and GPIO blocks:
-
-![Edison with SparkFun Blocks](https://raw.githubusercontent.com/drejkim/led-speech-edison/master/images/edison_sparkfun_blocks.JPG)
 
 ## Setting up Edison
 
@@ -188,51 +173,6 @@ source ~/.profile
 ./installPyAudio.sh
 ```
 
-## The circuit
-
-SparkFun [recommends](https://learn.sparkfun.com/tutorials/installing-libmraa-on-ubilinux-for-edison) using transistors to fully (and safely) light LEDs. To learn more about using transistors as switches, see this [tutorial](https://learn.sparkfun.com/tutorials/transistors/applications-i-switches).
-
-**Note:** You can use the Edison Mini or Arduino Breakout boards. However, the pin mappings in the Python files will differ. For more details, see this [tutorial](https://learn.sparkfun.com/tutorials/installing-libmraa-on-ubilinux-for-edison) from SparkFun.
-
-### Wiring up the circuit
-
-Shut down Edison and unplug it from power. Connect the LEDs to the GPIO block as shown:
-
-![Schematic](https://raw.githubusercontent.com/drejkim/led-speech-edison/master/images/schematic.png)
-
-![Connections](https://raw.githubusercontent.com/drejkim/led-speech-edison/master/images/connections.JPG)
-
-**Important**: The direction of the LEDs and the transistors matter! For the LEDs, the anode (longer leg) connects to a 330Ω resistor, while the cathode (shorter leg) connects to the collector of the transistor. When the flat edge of a transistor is facing you, the order of the pins from left to right are as follows: emitter, base, and collector.
-
-### Testing the circuit
-
-To see if the LEDs are configured correctly, power on Edison and run either (or both) of the following Python programs:
-
-```bash
-# All the LEDs turn on and off at the same time... CTRL+C to quit
-python blink.py
-
-# Cycles through the LEDs, one at a time starting with green... CTRL+C to quit
-python cycle.py
-```
-
-Check out the videos of the [blinking](https://youtu.be/YM24yuBLMrU) and [cycling](https://youtu.be/Un1QrOgTkug) LEDs to see the programs in action.
-
-## Speech-activated LEDs
-
-`speech.py` contains the code for activating the LEDs with speech. In `main()`, the program continually records 2-second audio clips, decodes the speech using `pocketsphinx`, then triggers the appropriate LED action. It also plays back the recognized word(s) through the headset.
-
-See `triggerLeds()` to see which words correspond to a LED action. Currently, the action words are:
-
-* RED
-* GREEN
-* WHITE
-* YELLOW
-* ALL
-* TORONTO
-* CANADA
-
-(The latter two words are a shout out to [FITC Toronto](http://fitc.ca/)!)
 
 Run the program:
 
@@ -241,7 +181,7 @@ Run the program:
 python speech.py
 ```
 
-Speak into the mic of the USB headset and say any of the trigger words. The corresponding LED action should happen!
+Speak into the mic of the USB headset and say any of the trigger words. The response should be spoken.
 
 **Note:** The language model files are located in `lm/`. To create your own set of commands, replace the words in `lm/corpus.txt` and use the [Sphinx Knowledge Base Tool](http://www.speech.cs.cmu.edu/tools/lmtool-new.html) to generate a new language model (`.lm`) and dictionary (`.dic`). You will then need to replace the filenames in `speech.py` and modify `triggerLeds()` to suit your needs.
 
