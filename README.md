@@ -125,7 +125,7 @@ In our case, the headset is shown under `sysdefault:CARD=Headset`.
 Create a `~/.asoundrc` file and add the following line to configure the headset:
 
 ```bash
-pcm.!default sysdefault:Headset
+pcm.!default sysdefault:Set
 ```
 
 The part after the colon must be what ALSA has as the name for your device (`Headset` in our case).
@@ -173,6 +173,10 @@ source ~/.profile
 ./installPyAudio.sh
 ```
 
+Install gTTS dependency
+```
+install opkg install libav-dev
+```
 
 Run the program:
 
