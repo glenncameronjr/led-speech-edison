@@ -1,4 +1,4 @@
-# led-speech-edison
+# speech-edison
 
 Device speech-activation using [Intel Edison](http://www.intel.com/content/www/us/en/do-it-yourself/edison.html), [SparkFun blocks](https://www.sparkfun.com/categories/272), [Python](https://www.python.org/), and [CMU Sphinx](http://cmusphinx.sourceforge.net/).
 
@@ -152,7 +152,7 @@ aplay ~/test.wav
 
 We will be using `pocketsphinx`, a lightweight version of [CMU's Sphinx](http://cmusphinx.sourceforge.net/) for doing natural language processing offline.
 
-To get this up and running, navigate to `led-speech-edison/bin` and run the commands below. We recommend that you run them one at a time, as some of them take a long time to execute:
+To get this up and running, navigate to `speech-edison/bin` and run the commands below. We recommend that you run them one at a time, as some of them take a long time to execute:
 
 ```bash
 # Install cython... this one takes a really long time!
@@ -187,7 +187,7 @@ python speech.py
 
 Speak into the mic of the USB headset and say any of the trigger words. The response should be spoken.
 
-**Note:** The language model files are located in `lm/`. To create your own set of commands, replace the words in `lm/corpus.txt` and use the [Sphinx Knowledge Base Tool](http://www.speech.cs.cmu.edu/tools/lmtool-new.html) to generate a new language model (`.lm`) and dictionary (`.dic`). You will then need to replace the filenames in `speech.py` and modify `triggerLeds()` to suit your needs.
+**Note:** The language model files are located in `lm/`. To create your own set of commands, replace the words in `lm/corpus.txt` and use the [Sphinx Knowledge Base Tool](http://www.speech.cs.cmu.edu/tools/lmtool-new.html) to generate a new language model (`.lm`) and dictionary (`.dic`). You will then need to replace the filenames in `speech.py` to suit your needs.
 
 ## Contributors
 
