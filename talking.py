@@ -1,84 +1,115 @@
-import subprocess
-import datetime
-import forecastio
-import unicodedata
-import simplejson as json
-from urllib2 import Request, urlopen, URLError
-import time
+import collections
+#import mraa
 import os
-from gtts import gTTS
-from pydub import AudioSegment
+import sys
+import time
 
-#forecastio api key needed
-api_key = "yourAPIkey"
-lat = 51.5033630
-lng = -0.1276250
+# Import things for pocketsphinx
+import pyaudio
+import wave
+import pocketsphinx as ps
+import sphinxbase
 
-forecast = forecastio.load_forecast(api_key, lat, lng)
+#wemo lib
+from ouimeaux.environment import Environment
 
-byHour = forecast.hourly()
-hourForecast =  byHour.summary
-byCurrent = forecast.currently()
+# Parameters for pocketsphinx
+LMD   = "/home/root/led-speech-edison/lm/8484.lm"
+DICTD = "/home/root/led-speech-edison/lm/8484.dic"
+CHUNK = 1024
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 16000
+RECORD_SECONDS = 2
+PATH = 'output'
 
-temp = int((byCurrent.temperature * 1.8) + 32)
-#print temp
+LED_ON = 1
+LED_OFF = 0
 
-startForecast = "Good morning, its 7am, the temperature in Pacifica is " + str(temp)   + " degrees farenheit. the weather is expected to be " + unicodedata.normalize('NFKD', hourForecast).encode('ascii','ignore')
-
-#print type(hourForecast)
-#print type(startForecast)
-#print str(datetime.datetime.now())
-
-#/api/county/spots/{county-name}/
-
-request = Request('http://api.spitcast.com/api/spot/forecast/120/')
-
-response = urlopen(request)
-kittens = response.read()
-parsed_json = json.loads(kittens)
-#print parsed_json
-spot = parsed_json[1]['spot_name']
-swell = parsed_json[1]['size']
-#print swell
-forecastero = " and The waves at " + str(spot) + " are " + str(swell) + " feet high"
-
-cowskin = startForecast + forecastero
-
-cm = 'espeak "'+cowskin+'"'
-
-#subprocess.call(['say', startForecast])
-#subprocess.call(['say', forecastero])
-
-#speech testing on mac
-def wake_up():
-	os.system(cm)
-    #subprocess.call(['say', startForecast])
-    #subprocess.call(['say', forecastero])
-
-#wake_up()
-
-def gspeak():
-	tts = gTTS(text= cowskin, lang='en-uk')
-	tts.save('hello.mp3')
-	
-	sound = AudioSegment.from_mp3("hello.mp3")
-	sound.export("hello.wav", format="wav")
-	
-	os.system("aplay hello.wav")
-	
+#time settings
 not_executed = 1
 
-#alarm timer in UTC time
-while(not_executed):
-    dt = list(time.localtime())
-    hour = dt[3]
-    minute = dt[4]
-    if hour == 18 and minute == 58:
-        gspeak()
-        not_executed = 0
-        while(not_executed == 0):
-            if hour == 18 and minute == 59:
-            	gspeak()
-                #not_executed = 1
+#wemo switch detect
+def on_switch(switch):
+	print "Switch found!", switch.name
+env = Environment(on_switch)
+env.start()
 
-not_executed = 0
+#switch = env.get_switch('Bedroom light').on
+
+#switch.explain()
+def turn_on():
+    switch_on = env.get_switch( 'Bedroom light' ).on()
+
+def turn_off():
+    switch_off = env.get_switch( 'Bedroom light' ).off()
+    
+def decodeSpeech(speech_rec, wav_file):
+	wav_file = file(wav_file,'rb')
+	wav_file.seek(44)
+	speech_rec.decode_raw(wav_file)
+	result = speech_rec.get_hyp()
+	return result[0]
+
+def main():
+    
+    if not os.path.exists(PATH):
+        os.makedirs(PATH)
+
+    p = pyaudio.PyAudio()
+    speech_rec = ps.Decoder(lm=LMD, dict=DICTD)
+
+    while True:
+        # Record audio
+    	stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+    	print("* recording")
+    	frames = []
+    	for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+    		data = stream.read(CHUNK)
+    		frames.append(data)
+    	print("* done recording")
+    	stream.stop_stream()
+    	stream.close()
+    	#p.terminate()
+
+        # Write .wav file
+        fn = "o.wav"
+    	wf = wave.open(os.path.join(PATH, fn), 'wb')
+    	wf.setnchannels(CHANNELS)
+    	wf.setsampwidth(p.get_sample_size(FORMAT))
+    	wf.setframerate(RATE)
+    	wf.writeframes(b''.join(frames))
+    	wf.close()
+
+        # Decode speech
+    	wav_file = os.path.join(PATH, fn)
+    	recognised = decodeSpeech(speech_rec, wav_file)
+    	rec_words = recognised.split()
+    	
+    	dt = list(time.localtime())
+        print str(dt[3]) + " : " + str(dt[4]) 
+     
+        if dt[3] == 14 and dt[4] == 00 and dt[5] >= 00 and dt[5]<=05:
+        	os.system('python talking.py')
+
+        # Voice actions
+        print recognised 
+        if recognised == "LIGHTS ON":
+        	turn_on()
+        elif recognised == "LIGHTS OFF":
+        	turn_off()
+        elif recognised == "POWER DOWN":
+        	turn_off()
+        elif recognised =="VERONICA" or recognised == "VERONIKA":
+        	os.system('aplay ~/mic-on.wav')	 
+        	
+        	
+        
+    	#cm = 'espeak "'+recognised+'"'
+    	#os.system(cm)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print "Keyboard interrupt received. Cleaning up..."
